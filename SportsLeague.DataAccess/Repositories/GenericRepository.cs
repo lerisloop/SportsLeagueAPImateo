@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 using Microsoft.EntityFrameworkCore;
 
 using SportsLeague.DataAccess.Context;
@@ -40,7 +37,7 @@ public class GenericRepository<T> : IGenericRepository<T> where T : AuditBase
 
         return await _dbSet.ToListAsync();
 
-
+    }
 
 public async Task<T?> GetByIdAsync(int id)
 

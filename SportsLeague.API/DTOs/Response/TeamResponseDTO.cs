@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SportsLeague.Domain.Entities
+﻿namespace SportsLeague.API.DTOs.Response
 {
-    public class Team : AuditBase
+    public class TeamResponseDTO
+
     {
+
+        public int Id { get; set; }
+
         public string Name { get; set; } = string.Empty;
 
         public string City { get; set; } = string.Empty;
@@ -15,5 +15,10 @@ namespace SportsLeague.Domain.Entities
         public string? LogoUrl { get; set; }
 
         public DateTime FoundedDate { get; set; }
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime? UpdatedAt { get; set; }
+
     }
 }

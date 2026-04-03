@@ -23,7 +23,10 @@ namespace SportsLeague.DataAccess.Context
 
         public DbSet<Tournament> Tournaments => Set<Tournament>(); 
 
-        public DbSet<TournamentTeam> TournamentTeams => Set<TournamentTeam>(); 
+        public DbSet<TournamentTeam> TournamentTeams => Set<TournamentTeam>();
+
+        public DbSet<Sponsor> Sponsors => Set<Sponsor>();
+        public DbSet<TournamentSponsor> TournamentSponsors => Set<TournamentSponsor>();
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -257,6 +260,37 @@ namespace SportsLeague.DataAccess.Context
 
                 .IsUnique();
 
+            });
+            // Sponsor
+            modelBuilder.Entity<Sponsor>(entity =>
+            {
+                entity.HasKey(s => s.Id);
+
+                entity.Property(s => s.Name)
+                    .IsRequired()
+                    .HasMaxLength(150);
+
+                entity.HasIndex(s => s.Name).IsUnique(); 
+
+                entity.Property(s => s.ContactEmail).IsRequired();
+                entity.Property(s => s.Category).IsRequired();
+            });
+
+            // TournamentSponsor
+            modelBuilder.Entity<TournamentSponsor>(entity =>
+            {
+                entity.HasKey(ts => ts.Id);
+
+                entity.HasOne(ts => ts.Tournament)
+                    .WithMany(t => t.TournamentSponsors)
+                    .HasForeignKey(ts => ts.TournamentId);
+
+                entity.HasOne(ts => ts.Sponsor)
+                    .WithMany(s => s.TournamentSponsors)
+                    .HasForeignKey(ts => ts.SponsorId);
+
+                entity.HasIndex(ts => new { ts.TournamentId, ts.SponsorId })
+                    .IsUnique(); 
             });
 
         }

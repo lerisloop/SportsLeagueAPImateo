@@ -27,11 +27,7 @@ public class TournamentController : ControllerBase
     private readonly IMapper _mapper;
 
 
-    public TournamentController(
-
-    ITournamentService tournamentService,
-
-    IMapper mapper)
+    public TournamentController(ITournamentService tournamentService,IMapper mapper)
 
     {
 

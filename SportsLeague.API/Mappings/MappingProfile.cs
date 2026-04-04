@@ -59,6 +59,8 @@ public class MappingProfile : Profile
 
         // Sponsor mappings
         CreateMap<SponsorRequestDTO, Sponsor>();
+        CreateMap<Sponsor, SponsorResponseDTO>();
+
     }
 
 }

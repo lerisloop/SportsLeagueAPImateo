@@ -17,6 +17,7 @@ namespace SportsLeague.Domain.Interfaces.Services
         
         Task RegisterToTournament(int sponsorId, int tournamentId, decimal contractAmount);
         Task<IEnumerable<Tournament>> GetTournaments(int sponsorId);
+
         Task RemoveFromTournament(int sponsorId, int tournamentId);
     }
 }

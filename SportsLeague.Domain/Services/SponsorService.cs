@@ -1,4 +1,6 @@
-﻿using SportsLeague.Domain.Entities;
+﻿using Microsoft.Extensions.Logging;
+using SportsLeague.Domain.Entities;
+using SportsLeague.Domain.Enums;
 using SportsLeague.Domain.Interfaces.Repositories;
 using SportsLeague.Domain.Interfaces.Services;
 using System;
@@ -11,99 +13,162 @@ namespace SportsLeague.Domain.Services
     
         public class SponsorService : ISponsorService
         {
-            private readonly ISponsorRepository _sponsorRepo;
-            private readonly ITournamentRepository _tournamentRepo;
-            private readonly ITournamentSponsorRepository _tsRepo;
+            private readonly ISponsorRepository _sponsorRepository;
+            private readonly ITournamentRepository _tournamentRepository;
+            private readonly ITournamentSponsorRepository _tournamentsponsorRepository;
+            private readonly ILogger<SponsorService> _logger;
 
             public SponsorService(
                 ISponsorRepository sponsorRepo,
                 ITournamentRepository tournamentRepo,
-                ITournamentSponsorRepository tsRepo)
+                ITournamentSponsorRepository tsRepo,
+                ILogger<SponsorService> logger)
             {
-                _sponsorRepo = sponsorRepo;
-                _tournamentRepo = tournamentRepo;
-                _tsRepo = tsRepo;
+                _sponsorRepository = sponsorRepo;
+                _tournamentRepository = tournamentRepo;
+                _tournamentsponsorRepository = tsRepo;
+                _logger = logger;
             }
 
-            // 🔹 GET ALL
+           
             public async Task<IEnumerable<Sponsor>> GetAllAsync()
             {
-                return await _sponsorRepo.GetAllAsync();
+                return await _sponsorRepository.GetAllAsync();
             }
 
-            // 🔹 GET BY ID
+           
             public async Task<Sponsor?> GetByIdAsync(int id)
             {
-                return await _sponsorRepo.GetByIdAsync(id);
+                return await _sponsorRepository.GetByIdAsync(id);
             }
 
-            // 🔹 CREATE
-            public async Task<Sponsor> CreateAsync(Sponsor s)
+            
+       
+        public async Task<Sponsor> CreateAsync(Sponsor sponsor)
+
+        {
+
+            // Validación de negocio: nombre único
+
+            var existingSponsor = await _sponsorRepository.GetByNameAsync(sponsor.Name);
+
+            if (existingSponsor != null)
+
             {
-                if (await _sponsorRepo.ExistsByNameAsync(s.Name))
-                    throw new InvalidOperationException("Nombre duplicado");
 
-                if (!s.ContactEmail.Contains("@"))
-                    throw new InvalidOperationException("Email inválido");
+                _logger.LogWarning("Sponsor with name '{SponsorName}' already exists", sponsor.Name);
 
-                return await _sponsorRepo.CreateAsync(s);
+                throw new InvalidOperationException(
+
+                $"Ya existe un equipo con el nombre '{sponsor.Name}'");
+
             }
-
-            // 🔹 UPDATE
-            public async Task UpdateAsync(int id, Sponsor sponsor)
+            // Validacion de negocio: ContactEmail debe ser un formato válido 
+            if (!sponsor.ContactEmail.Contains("@"))
             {
-                var existing = await _sponsorRepo.GetByIdAsync(id);
+                _logger.LogWarning("Email not valid", sponsor.Name);
 
-                if (existing == null)
-                    throw new KeyNotFoundException("Sponsor no existe");
+                throw new InvalidOperationException("Email inválido");
 
-                if (await _sponsorRepo.ExistsByNameAsync(sponsor.Name) &&
-                    existing.Name.ToLower() != sponsor.Name.ToLower())
-                    throw new InvalidOperationException("Nombre duplicado");
-
-                if (!sponsor.ContactEmail.Contains("@"))
-                    throw new InvalidOperationException("Email inválido");
-
-                existing.Name = sponsor.Name;
-                existing.ContactEmail = sponsor.ContactEmail;
-                existing.Phone = sponsor.Phone;
-                existing.WebsiteUrl = sponsor.WebsiteUrl;
-                existing.Category = sponsor.Category;
-                existing.UpdatedAt = DateTime.UtcNow;
-
-                await _sponsorRepo.UpdateAsync(existing);
             }
+            _logger.LogInformation("Creating sponsor: {sponsorName}", sponsor.Name);
 
-            // 🔹 DELETE
-            public async Task DeleteAsync(int id)
+            return await _sponsorRepository.CreateAsync(sponsor);
+
+        }
+
+
+     
+        public async Task UpdateAsync(int id, Sponsor sponsor)
+
+        {
+
+            var existing = await _sponsorRepository.GetByIdAsync(id);
+
+            if (existing == null)
+
+                throw new KeyNotFoundException($"No se encontró el sponsor con ID {id}");
+
+            if (existing.Name != sponsor.Name)
+
             {
-                var existing = await _sponsorRepo.GetByIdAsync(id);
 
-                if (existing == null)
-                    throw new KeyNotFoundException("Sponsor no existe");
+                var teamWithSameName = await _sponsorRepository.GetByNameAsync(sponsor.Name);
 
-                await _sponsorRepo.DeleteAsync(id);
+                if (teamWithSameName != null)
+
+                {
+
+                    throw new InvalidOperationException(
+
+                    $"Ya existe un equipo con el nombre '{sponsor.Name}'");
+
+                }
+
             }
 
-            // 🔹 N:M → REGISTRAR
+            if (!sponsor.ContactEmail.Contains("@"))
+            {
+                _logger.LogWarning("Email not valid", sponsor.Name);
+
+                throw new InvalidOperationException("Email inválido");
+
+            }
+
+
+
+
+
+            existing.Name = sponsor.Name;
+            existing.ContactEmail = sponsor.ContactEmail;
+            existing.Phone = sponsor.Phone;
+            existing.WebsiteUrl = sponsor.WebsiteUrl;
+            existing.Category = sponsor.Category;
+            existing.UpdatedAt = DateTime.UtcNow;
+
+
+            _logger.LogInformation("Updating Sponsor with ID: {TournamentId}", id);
+
+            await _sponsorRepository.UpdateAsync(existing);
+
+        }
+
+
+        public async Task DeleteAsync(int id)
+        {
+            var existing = await _sponsorRepository.GetByIdAsync(id);
+
+            if (existing == null)
+            {
+                _logger.LogWarning("sponsor with ID {SponsorId} not found for deletion", id);
+
+                throw new KeyNotFoundException(
+
+                $"No se encontró el patrocinador con ID {id}");
+            }
+            _logger.LogInformation("Deleting sponsor with ID: {SponsorId}", id);
+            await _sponsorRepository.DeleteAsync(id);
+            }
+        
+            
             public async Task RegisterToTournament(int sponsorId, int tournamentId, decimal amount)
             {
                 if (amount <= 0)
                     throw new InvalidOperationException("Monto inválido");
 
-                var sponsor = await _sponsorRepo.GetByIdAsync(sponsorId);
+                var sponsor = await _sponsorRepository.GetByIdAsync(sponsorId);
                 if (sponsor == null)
-                    throw new KeyNotFoundException("Sponsor no existe");
+                    throw new InvalidOperationException("Sponsor no existe");
 
-                var tournament = await _tournamentRepo.GetByIdAsync(tournamentId);
+                var tournament = await _tournamentRepository.GetByIdAsync(tournamentId);
                 if (tournament == null)
                     throw new KeyNotFoundException("Torneo no existe");
 
-                var exists = await _tsRepo.GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
+                var exists = await _tournamentsponsorRepository.GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
                 if (exists != null)
                     throw new InvalidOperationException("Ya vinculado");
 
-                await _tsRepo.CreateAsync(new TournamentSponsor
+                await _tournamentsponsorRepository.CreateAsync(new TournamentSponsor
                 {
                     SponsorId = sponsorId,
                     TournamentId = tournamentId,
@@ -112,27 +177,26 @@ namespace SportsLeague.Domain.Services
                 });
             }
 
-            // 🔹 N:M → LISTAR TORNEOS
             public async Task<IEnumerable<Tournament>> GetTournaments(int sponsorId)
             {
-                var sponsor = await _sponsorRepo.GetByIdAsync(sponsorId);
+                var sponsor = await _sponsorRepository.GetByIdAsync(sponsorId);
                 if (sponsor == null)
                     throw new KeyNotFoundException("Sponsor no existe");
 
-                var list = await _tsRepo.GetBySponsorAsync(sponsorId);
+                var list = await _tournamentsponsorRepository.GetBySponsorAsync(sponsorId);
                 return list.Select(x => x.Tournament);
             }
 
-            // 🔹 N:M → ELIMINAR RELACIÓN
             public async Task RemoveFromTournament(int sponsorId, int tournamentId)
             {
-                var ts = await _tsRepo.GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
+                var tournamentsponsor = await _tournamentsponsorRepository.GetByTournamentAndSponsorAsync(tournamentId, sponsorId);
 
-                if (ts == null)
+                if (tournamentsponsor == null)
                     throw new KeyNotFoundException("Relación no existe");
 
-                await _tsRepo.DeleteAsync(ts.Id);
+                await _tournamentsponsorRepository.DeleteAsync(tournamentsponsor.Id);
             }
-        }
+     
+    }
     }
 

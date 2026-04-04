@@ -18,6 +18,16 @@ namespace SportsLeague.DataAccess.Repositories
             return await _dbSet
                 .AnyAsync(s => s.Name.ToLower() == name.ToLower());
         }
+        public async Task<Sponsor?> GetByNameAsync(string name)
+
+        {
+
+            return await _dbSet
+
+            .FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
+
+        }
+
     }
 
 }

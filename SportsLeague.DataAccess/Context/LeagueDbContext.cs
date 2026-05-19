@@ -35,6 +35,8 @@ namespace SportsLeague.DataAccess.Context
         public DbSet<Goal> Goals => Set<Goal>();
 
         public DbSet<Card> Cards => Set<Card>();
+
+        public DbSet<MatchLineup> MatchLineups => Set<MatchLineup>();
         protected override void OnModelCreating(ModelBuilder modelBuilder)
 
         {
@@ -485,6 +487,38 @@ namespace SportsLeague.DataAccess.Context
 
                               .OnDelete(DeleteBehavior.Restrict);
 
+                    });
+                    // MatchLineup configuration
+                    modelBuilder.Entity<MatchLineup>(entity =>
+                    {
+                        entity.HasKey(l => l.Id);
+
+                        entity.Property(l => l.Position)
+                            .IsRequired()
+                            .HasMaxLength(10);
+
+                        entity.Property(l => l.IsStarter)
+                            .IsRequired();
+
+                        entity.Property(l => l.CreatedAt)
+                            .IsRequired();
+
+                        entity.Property(l => l.UpdatedAt)
+                            .IsRequired(false);
+
+                        // Un jugador no puede aparecer dos veces en la misma alineación (V4)
+                        entity.HasIndex(l => new { l.MatchId, l.PlayerId })
+                            .IsUnique();
+
+                        entity.HasOne(l => l.Match)
+                            .WithMany()
+                            .HasForeignKey(l => l.MatchId)
+                            .OnDelete(DeleteBehavior.Cascade);
+
+                        entity.HasOne(l => l.Player)
+                            .WithMany()
+                            .HasForeignKey(l => l.PlayerId)
+                            .OnDelete(DeleteBehavior.Restrict);
                     });
                 });
             });

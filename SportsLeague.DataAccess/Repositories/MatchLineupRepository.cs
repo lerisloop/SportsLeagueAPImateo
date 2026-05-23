@@ -14,18 +14,18 @@ public class MatchLineupRepository : GenericRepository<MatchLineup>, IMatchLineu
     public async Task<IEnumerable<MatchLineup>> GetByMatchAsync(int matchId)
     {
         return await _dbSet
-            .Where(l => l.MatchId == matchId)
+            .Where(Ml => Ml.MatchId == matchId)
             .ToListAsync();
     }
 
     public async Task<IEnumerable<MatchLineup>> GetByMatchWithDetailsAsync(int matchId)
     {
         return await _dbSet
-            .Where(l => l.MatchId == matchId)
-            .Include(l => l.Player)
+            .Where(Ml => Ml.MatchId == matchId)
+            .Include(Ml => Ml.Player)
                 .ThenInclude(p => p.Team)
-            .OrderBy(l => l.Player.TeamId)
-            .ThenByDescending(l => l.IsStarter)
+            .OrderBy(Ml => Ml.Player.TeamId)
+            .ThenByDescending(Ml => Ml.IsStarter)
             .ToListAsync();
     }
 
@@ -33,10 +33,10 @@ public class MatchLineupRepository : GenericRepository<MatchLineup>, IMatchLineu
         int matchId, int teamId)
     {
         return await _dbSet
-            .Where(l => l.MatchId == matchId && l.Player.TeamId == teamId)
-            .Include(l => l.Player)
+            .Where(Ml => Ml.MatchId == matchId && Ml.Player.TeamId == teamId)
+            .Include(Ml => Ml.Player)
                 .ThenInclude(p => p.Team)
-            .OrderByDescending(l => l.IsStarter)
+            .OrderByDescending(Ml => Ml.IsStarter)
             .ToListAsync();
     }
 
@@ -49,9 +49,9 @@ public class MatchLineupRepository : GenericRepository<MatchLineup>, IMatchLineu
     public async Task<int> CountStartersByMatchAndTeamAsync(int matchId, int teamId)
     {
         return await _dbSet
-            .Where(l => l.MatchId == matchId
-                     && l.Player.TeamId == teamId
-                     && l.IsStarter)
+            .Where(Ml => Ml.MatchId == matchId
+                     && Ml.Player.TeamId == teamId
+                     && Ml.IsStarter)
             .CountAsync();
     }
 }

@@ -7,15 +7,9 @@ public class MatchLineupResponseDTO
     public int MatchId { get; set; }
 
     public int PlayerId { get; set; }
-
-    /// <summary>
-    /// Nombre completo del jugador (FirstName + LastName)
-    /// </summary>
+  
     public string PlayerName { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Nombre del equipo al que pertenece el jugador
-    /// </summary>
+ 
     public string TeamName { get; set; } = string.Empty;
 
     public bool IsStarter { get; set; }

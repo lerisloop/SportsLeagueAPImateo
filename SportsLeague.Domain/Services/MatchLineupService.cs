@@ -31,7 +31,7 @@ public class MatchLineupService : IMatchLineupService
         var match = await _matchRepository.GetByIdAsync(matchId);
         if (match == null)
             throw new KeyNotFoundException(
-                $"No se encontró el partido con ID {matchId}");
+                $"No se encontró el partiod con ID {matchId}");
 
        
         var player = await _playerRepository.GetByIdAsync(lineup.PlayerId);
